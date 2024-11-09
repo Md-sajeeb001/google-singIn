@@ -1,19 +1,47 @@
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import auth from "../init/firebase_init";
+import { useState } from "react";
+import { GithubAuthProvider } from "firebase/auth";
 
 const Home = () => {
+  const [user, setUser] = useState(null);
+
   const googleProvider = new GoogleAuthProvider();
+  const gitHubProvider = new GithubAuthProvider();
 
   const handelSubmit = (e) => {
     e.preventDefault();
 
     signInWithPopup(auth, googleProvider)
       .then((result) => {
-        console.log(result.user.displayName);
+        console.log(result.user);
+        setUser(result.user);
       })
       .catch((error) => {
         console.log("error", error);
+        setUser(null);
       });
+  };
+
+  const handelSignOut = (e) => {
+    e.preventDefault();
+    signOut(auth)
+      .then(() => {
+        setUser(null);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handelGithub = (e) => {
+    e.preventDefault();
+
+    signInWithPopup(auth, gitHubProvider)
+      .then((result) => {
+        setUser(result.user);
+      })
+      .catch((error) => console.log(error));
   };
 
   return (
@@ -61,6 +89,7 @@ const Home = () => {
             />
           </div>
         </div>
+
         <div className="pt-14">
           <textarea
             name="message"
@@ -69,12 +98,30 @@ const Home = () => {
             className="textarea textarea-bordered textarea-lg w-full "
           ></textarea>
         </div>
-        <div className="pt-6 text-center">
-          <button onClick={handelSubmit} className="btn">
-            Submit
-          </button>
+        <div className="pt-6 text-center ">
+          {user ? (
+            <button onClick={handelSignOut} className="btn">
+              sign out
+            </button>
+          ) : (
+            <div>
+              <button onClick={handelSubmit} className="btn mr-8">
+                log in
+              </button>
+              <button onClick={handelGithub} className="btn">
+                Sing in With Github
+              </button>
+            </div>
+          )}
         </div>
       </form>
+      {user && (
+        <div>
+          <h2>{user.displayName}</h2>
+          <p>{user.email}</p>
+          <img src={user.photoURL} alt="" />
+        </div>
+      )}
     </div>
   );
 };
